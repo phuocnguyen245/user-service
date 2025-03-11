@@ -13,15 +13,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  BLOCKED
+  DELETED
+}
+
 model User {
-  id        String  @id @default(auto()) @map("_id") @db.ObjectId
-  username  String  @unique
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  username  String     @unique
   password  String
-  email     String  @unique
+  email     String     @unique
   name      String
   role      String
-  isDeleted Boolean @default(false)
+  status    UserStatus
+  isDeleted Boolean    @default(false)
 
+  ip       String
   roles    Role?         @relation(fields: [name], references: [name])
   sessions UserSession[]
 
@@ -42,7 +52,8 @@ model Role {
 model UserSession {
   id     String   @id @default(auto()) @map("_id") @db.ObjectId
   userId String   @unique @db.ObjectId
-  token  String[]
+  tokens  String[]
+  status String
   user   User?    @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())

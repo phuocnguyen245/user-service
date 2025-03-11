@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '../config/prisma';
-import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class UserService {
@@ -23,19 +22,25 @@ export class UserService {
   async login(data: { username: string; password: string }) {
     const user = await prisma.user.findFirst({
       where: {
-        username: data.username,
-        password: data.password,
-      },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        role: true,
+        OR: [
+          {
+            email: data.username,
+          },
+          {
+            username: data.username,
+          },
+        ],
       },
     });
+
     if (!user) {
-      throw new NotFoundException('Invalid username or password');
+      throw new NotFoundException('User not found');
     }
-    return user;
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    };
   }
 }

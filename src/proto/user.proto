@@ -5,6 +5,7 @@ package user;
 service UserService {
   rpc GetUser (GetUserRequest) returns (UserResponse);
   rpc Login (LoginUserRequest) returns (UserResponse);
+  rpc Register (RegisterRequest) return (UserResponse)
 }
 
 message GetUserRequest {

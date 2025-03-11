@@ -1,46 +1,105 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { prisma } from '../config/prisma';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { User } from '@prisma/client';
+import UserRepository from './user.repository';
+const message = {
+  NOT_FOUND: {
+    message: 'Invalid username or password',
+    code: 'invalid.username.or.password',
+  },
+  CONFLICT: {
+    message: 'User already exists',
+    code: 'user.already.exists',
+  },
+};
 
 @Injectable()
 export class UserService {
-  async getUser(data: { id: string }) {
-    const user = await prisma.user.findUnique({
-      where: { id: data.id },
-    });
+  constructor(private readonly userRepo: UserRepository) {}
 
+  async getUser(id: string) {
+    const user = await this.userRepo.getUserById(id);
     if (!user) {
-      return { id: '', name: '', email: '' };
+      return new NotFoundException(message.NOT_FOUND);
     }
-
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    };
+    return user;
   }
 
   async login(data: { username: string; password: string }) {
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          {
-            email: data.username,
-          },
-          {
-            username: data.username,
-          },
-        ],
-      },
-    });
+    const existingUser = await this.userRepo.findByUsernameAndEmail(
+      data.username,
+    );
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (
+      !existingUser ||
+      (await this.userRepo.comparePassword(
+        data.password,
+        existingUser.password,
+      ))
+    ) {
+      throw new NotFoundException(message.NOT_FOUND);
     }
 
     return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
+      id: existingUser.id,
+      name: existingUser.name,
+      email: existingUser.email,
     };
+  }
+
+  async register(data: User) {
+    const existingUser = await this.userRepo.findByUsernameAndEmail(
+      data.username,
+      data.email,
+    );
+    if (existingUser) {
+      throw new ConflictException(message.CONFLICT);
+    }
+  }
+
+  async forgotPassword(id: string, data: { password: string }) {
+    const existingUser = await this.getUser(id);
+    if (!existingUser) {
+      throw new NotFoundException(message.NOT_FOUND);
+    }
+
+    const newPassword = await this.userRepo.hashPassword(data.password);
+
+    const updatedUser = await this.userRepo.updateUser(id, {
+      password: newPassword,
+    });
+
+    return updatedUser;
+  }
+
+  async changePassword(
+    id: string,
+    data: { oldPassword: string; newPassword: string },
+  ) {
+    const existingUser = await this.userRepo.getUserById(id);
+
+    if (!existingUser) {
+      throw new NotFoundException(message.NOT_FOUND);
+    }
+
+    const isPasswordMatch = await this.userRepo.comparePassword(
+      data.oldPassword,
+      existingUser.name,
+    );
+
+    if (!isPasswordMatch) {
+      throw new NotFoundException(message.NOT_FOUND);
+    }
+
+    const newPassword = await this.userRepo.hashPassword(data.newPassword);
+
+    const updatedUser = await this.userRepo.updateUser(id, {
+      password: newPassword,
+    });
+
+    return updatedUser;
   }
 }

@@ -58,6 +58,12 @@ export class UserService {
     if (existingUser) {
       throw new ConflictException(message.CONFLICT);
     }
+
+    const hashedPassword = await this.userRepo.hashPassword(data.password);
+    return await this.userRepo.createUser({
+      ...data,
+      password: hashedPassword,
+    });
   }
 
   async forgotPassword(id: string, data: { password: string }) {

@@ -1,1 +1,1 @@
-export const USER_SERVICE_PORT = 50051;
+export const USER_SERVICE_PORT = 0;

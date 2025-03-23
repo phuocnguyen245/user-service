@@ -23,7 +23,7 @@ export class UserService {
   async getUser(id: string) {
     const user = await this.userRepo.getUserById(id);
     if (!user) {
-      return new NotFoundException(message.NOT_FOUND);
+      return new NotFoundException("Invalid username or password'");
     }
     return user;
   }
@@ -35,7 +35,7 @@ export class UserService {
 
     if (
       !existingUser ||
-      (await this.userRepo.comparePassword(
+      !(await this.userRepo.comparePassword(
         data.password,
         existingUser.password,
       ))
@@ -47,6 +47,7 @@ export class UserService {
       id: existingUser.id,
       name: existingUser.name,
       email: existingUser.email,
+      role: existingUser.role,
     };
   }
 

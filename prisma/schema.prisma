@@ -27,11 +27,11 @@ model User {
   password  String
   email     String     @unique
   name      String
-  role      String
-  status    UserStatus
+  role      String     @default("user")
+  status    UserStatus @default(PENDING)
   isDeleted Boolean    @default(false)
 
-  ip       String
+  ip       String?
   roles    Role?         @relation(fields: [name], references: [name])
 
   createdAt DateTime @default(now())

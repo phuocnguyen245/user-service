@@ -24,9 +24,9 @@ export class UserController {
   }
 
   @GrpcMethod('UserService', 'Register')
-  async register(data: { user: User }) {
+  async register(data: User) {
     try {
-      const user = await this.userService.register(data.user);
+      const user = await this.userService.register(data);
       return user;
     } catch (error) {
       console.log(error);

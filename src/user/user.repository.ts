@@ -41,6 +41,7 @@ class UserRepository {
   async findByUsernameAndEmail(username: string, email?: string) {
     const user = await prisma.user.findFirst({
       where: {
+        isDeleted: false,
         OR: [{ username }, { email: email || username }],
       },
       select: {
@@ -48,6 +49,7 @@ class UserRepository {
         name: true,
         email: true,
         password: true,
+        role: true,
       },
     });
     return user;

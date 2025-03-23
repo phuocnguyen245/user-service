@@ -5,7 +5,9 @@ package user;
 service UserService {
   rpc GetUser (GetUserRequest) returns (UserResponse);
   rpc Login (LoginUserRequest) returns (UserResponse);
-  rpc Register (RegisterRequest) return (UserResponse)
+  rpc Register (RegisterRequest) returns (UserResponse);
+  rpc ForgotPassword (ForgotPasswordRequest) returns (UserResponse);
+  rpc ChangePassword (ChangePasswordRequest) returns (UserResponse);
 }
 
 message GetUserRequest {
@@ -17,8 +19,28 @@ message LoginUserRequest{
   string password = 2;
 }
 
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+  string email = 3;
+  string name = 4;
+  string role = 5;
+}
+
+message ForgotPasswordRequest {
+  string id = 1;
+  string password = 2;
+}
+
+message ChangePasswordRequest {
+  string id = 1;
+  string oldPassword = 2;
+  string newPassword = 3;
+}
+
 message UserResponse {
   string id = 1;
   string name = 2;
   string email = 3;
+  string role = 4;
 }
